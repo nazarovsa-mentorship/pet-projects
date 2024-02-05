@@ -1,0 +1,62 @@
+version: "3"
+
+services:
+  booking-service_catalog-host:
+    container_name: catalog-host
+    image: ghcr.io/nazarovsa/pet-booking-service-catalog/catalog-host:1.1.1
+    platform: linux/amd64
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./docker-compose-mount/BookingService.Catalog.Host/appsettings.json:/app/appsettings.json
+      - ./docker-compose-mount/BookingService.Catalog.Host/appsettings.Production.json:/app/appsettings.Production.json
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      booking-service_catalog-db:
+        condition: service_healthy
+      booking-service_catalog-migrations:
+        condition: service_completed_successfully
+      booking-service_rabbitmq:
+        condition: service_healthy
+
+  booking-service_catalog-migrations:
+    container_name: catalog-migrations
+    image: ghcr.io/nazarovsa/pet-booking-service-catalog/catalog-migrations:1.1.1
+    platform: linux/amd64
+    environment:
+      DOTNET_ENVIRONMENT: Production
+    depends_on:
+      booking-service_catalog-db:
+        condition: service_healthy
+  
+  booking-service_catalog-db:
+    image: postgres:latest
+    container_name: catalog-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "booking_service_catalog"
+      POSTGRES_USER: "catalog_admin"
+      POSTGRES_PASSWORD: "admin_catalog"
+      PGDATA: /data/postgres
+    healthcheck:
+      test: /usr/bin/pg_isready
+      interval: 5s
+      timeout: 10s
+      retries: 5
+        
+  booking-service_rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 5s
+      timeout: 10s
+      retries: 3
