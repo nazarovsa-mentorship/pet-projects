@@ -25,7 +25,7 @@
 - В сборке `BookingService.Bookings.Host` создать классы `Startup.cs` и `HostBuilderFactory.cs`, который будет содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api)
 - Добавить Swagger
 - Добавить файл конфигурации `appsettings.Production.json`, который будет использоваться для настройки Production окружения во время запуска приложения в docker контейнере.
-- Добавить логирование с Serilog в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
+- Добавить логирование с [[Serilog]] в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
 	- Конфигурироваться из конфигурации приложения (файла appsettings.json)
 	- Использовать минимальный уровень логирования по умолчанию `Information` (задается в appsettings.json)
 	- В Development окружении выводить логи в [консоль](https://github.com/serilog/serilog-sinks-console)
@@ -71,7 +71,10 @@
 	- Методы, возвращающие несколько представлений "Бронирование", должны возвращать массив `Task<BookingData[]`
 	- Метод отмены не возвращает ничего (Task), в случае ошибки возвращает описание в формате ProblemDetails (см. пункт 6.4)
 - Создать исключение `BusinessRuleException`, которое будет порождаться на сервисном слое (Command- и Query- handlers) в случае, если не выполнены проверки бизнес-логики. Например, дата начала больше даты окончания, сущность в неправильном статусе, не указаны обязательные поля для выполнения операции, etc.
-- Реализовать ответ сервера в случае возникновения исключений по формату Problem Details. Выполнить маппинг исключения `BusinessRuleException` на http статус 400. `BusinessRuleException.Message` записывать в Title, `BusinessRuleException.StackTrace` записывать в Details. 
+- Создать исключение `ValidationException` с дополнительным свойством `public string Errors[] { get; }`, которое будет порождаться на сервисном слое (Command- и Query- handlers) в случае неуспешных проверок валидации входящих команд и запросов. В свойство `Errors[]` будут записываться ошибки валидации.
+- Реализовать ответ сервера в случае возникновения исключений по формату [[Problem Details]]. 
+	- Выполнить маппинг исключения `BusinessRuleException` на http статус 400. `BusinessRuleException.Message` записывать в Title, `BusinessRuleException.StackTrace` записывать в Details. 
+	- Выполнить маппинг исключения `BusinessRuleException` на http статус 402.  `ValidationException.Message` записывать в Title, `ValidationException.Errors` соединять разделителем `Environment.NewLine` в одну строку и записывать в Details. 
 ## Критерии оценки
 1. Созданы классы для DTO, команд и запросов.  
 2. В `BookingsController` внедрены `IBookingsCommandHandler` и `IBookingsQueriesHandler`.  
@@ -85,10 +88,15 @@
 ## Цель
 Сформировать навыки реализации бизнес-логики приложения и написания unit-тестов.
 ## Задача
-- Создать сущность "Бронирование", `Booking`.
-- Подключаем в `BookingService.Bookings.AppServices` nuget-пакет `BookingService.Catalog.Api.Contracts` для синхронных взаимодействий с сервисом "Каталог". См. #Приложение 1 Подключение клиента микросервиса "Каталог"
+- В сборке `BookingService.Bookings.AppServices` в каталоге `Bookings` создать сущность "Бронирование", `Booking`.
+- Подключаем в `BookingService.Bookings.AppServices` nuget-пакет `BookingService.Catalog.Api.Contracts` для синхронных взаимодействий с сервисом "Каталог". См. [[#Приложение 1 Подключение клиента микросервиса "Каталог"]]
+- Создать валидаторы команд, `CreateBookingCommand` и `CancelBookingCommand`, с использованием FluentValidation. Валидация должна выолняться в начале метода обрабатывающего команду путем создания нового экземпляра валидатора `new CommandValidator();` В случае неуспешной валидации порождать исключение `ValidationException` и записывать ошибки из результата валидации в поле `Errors`.
+	- `CreateBookingCommandValidator` должен проверять, что идентификатор пользователя и ресурса не равны 0, дата окончания бронирования больше даты начала бронирования.
+	- `CancelBookingCommandValidator` должен проверять, что идентификатор бронирования не равен 0.
+- Создать сборку `BookingsService.Bookings.AppServices.UnitTests` типа unit-tests с использованием xUnit в каталоге tests. В ней будут реализовываться тесты.
+- В сборке `BookingsService.Bookings.AppServices.UnitTests` написать тесты на созданные классы валидаторов.
 - Реализовать методы `BookingCommandHandler`. Класс должен взаимодействовать с микросервисом "Каталог" через внедрение `IBookingJobsController` и работать с слоем доступа к данным через репозиторий `IBookingRepository`.
-- Написать тесты на методы `BookingCommandHandler` с использованием xUnit: Минимальный набор тестов должен включать в себя один позитивный и один негативный сценарии. Зависимости должны быть замоканы с использованием NSubstitute. Успешная проверка должна включать проверку вызова зависимостей (`IBookingRepository`) с верными параметрами.
+- В сборке `BookingsService.Bookings.AppServices.UnitTests` написать тесты на методы `BookingCommandHandler` с использованием [[xUnit]]: Минимальный набор тестов должен включать в себя один позитивный и один негативный сценарии. Зависимости должны быть замоканы с использованием [[NSubstitute]]. Успешная проверка должна включать проверку вызова зависимостей (`IBookingRepository`) с верными параметрами.
 - Реализовать методы `BookingQueryHandler`. Класс может использовать абстракции прямого доступа к данным без репозитория.
 - Создать интерфейс репозитория, `IBookingRepository`, и его in-memory реализацию, `InMemoryBookingRepository`. Методы:
 	- Получение бронирования по идентификатору
@@ -100,8 +108,10 @@
 1. Реализована сущность `Booking`
 2. Реализован интерфейс `IBookingCommandsHandler` согласно требованиям
 3. Все публичные методы `BookingCommandsHandler` покрыты тестами
-4. Создан интерфейс `IBookingQueryHandler` согласно требованиям
-5. Создан интрефейс `IBookingRepository`, и его in-memory реализация
+4. Реализован интерфейс `IBookingQueryHandler` согласно требованиям
+5. Создан интерфейс `IBookingRepository`, и его in-memory реализация
+6. Реализованы валидаторы для команд
+7. Валидаторы для команд покрыты тестами
 ### Приложения
 #### Приложение 1: Подключение клиента микросервиса "Каталог"
 1. Создаем класс опций `CatalogServiceOptions` с полем `public string BasePath { get; set; }` для указания базового пути к микросервису "Каталог". 
@@ -130,3 +140,4 @@
 [NSubstitute: github.io](https://nsubstitute.github.io)   
 [Metanit: Паттерн 'Репозиторий' в ASP.NET](https://metanit.com/sharp/articles/mvc/11.php)  
 [RestEase](https://github.com/canton7/RestEase)  
+[FluentValidation](https://docs.fluentvalidation.net/en/latest/)
