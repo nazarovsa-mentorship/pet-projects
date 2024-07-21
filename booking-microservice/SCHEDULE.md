@@ -109,8 +109,8 @@
 
 ## Материалы для изучения
 
-[Handling Web API Exceptions with ProblemDetails middleware](https://andrewlock.net/handling-web-api-exceptions-with-problemdetails-middleware/)
-[Metanit: Создание контроллера](https://metanit.com/sharp/aspnet5/23.2.php)
+[Metanit: Создание контроллера](https://metanit.com/sharp/aspnet5/23.2.php)  
+[Handling Web API Exceptions with ProblemDetails middleware](https://andrewlock.net/handling-web-api-exceptions-with-problemdetails-middleware/)  
 
 # Недели 5 - 6: Создание и тестирование бизнес-логики приложения
 
