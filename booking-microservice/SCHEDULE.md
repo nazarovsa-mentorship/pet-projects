@@ -31,18 +31,19 @@
 	- Библиотека классов: `BookingService.Bookings.Api.Contracts` - публичные контракты приложения
 	- Библиотека классов: `BookingService.Bookings.AppServices` - сервисный слой
 	- В сборку `BookingService.Bookings.Host` добавить ссылку на `BookingService.Bookings.AppServices` и `BookingService.Bookings.Api.Contracts`
-3. Добавить `BookingService.Bookings.Host` в docker-compose.yml 
+3. Заменить значение `Microsoft.NET.Sdk` на `Microsoft.NET.Sdk.Web` в значении `Sdk` тэга `Project` в файле `BookingService.Bookings.Host.csproj`.
+4. Добавить `BookingService.Bookings.Host` в docker-compose.yml 
 	- Сгенерировать dockerfile средствами IDE
 	- Добавить в секцию `services` docker-compose.yml сервис booking-service_bookings-host
-4. В сборке `BookingService.Bookings.Host` создать классы `Startup.cs` и `HostBuilderFactory.cs`, который будет содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api)
-5. Добавить Swagger
-6. Добавить файл конфигурации `appsettings.Production.json`, который будет использоваться для настройки Production окружения во время запуска приложения в docker-compose.
-7. Добавить логирование с Serilog в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
+5. В сборке `BookingService.Bookings.Host` создать классы `Startup.cs` и `HostBuilderFactory.cs`, который будет содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api)
+6. Добавить Swagger
+7. Добавить файл конфигурации `appsettings.Production.json`, который будет использоваться для настройки Production окружения во время запуска приложения в docker-compose.
+8. Добавить логирование с Serilog в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
 	- Конфигурироваться из конфигурации приложения (файла appsettings.json)
 	- Использовать минимальный уровень логирования по умолчанию `Information` (задается в appsettings.json)
 	- В Development окружении выводить логи в [консоль](https://github.com/serilog/serilog-sinks-console)
 	- В Production окружении выводить логи в [консоль](https://github.com/serilog/serilog-sinks-console) и [файл](https://github.com/serilog/serilog-sinks-file) в каталоге `/var/logs/booking-service-bookings/`
-8. В сборке `BookingService.Bookings.Host` в каталоге Controllers создать класс контроллера, `BookingsController`, без реализации.
+9. В сборке `BookingService.Bookings.Host` в каталоге Controllers создать класс контроллера, `BookingsController`, без реализации.
 
 ## Критерии оценки
 
