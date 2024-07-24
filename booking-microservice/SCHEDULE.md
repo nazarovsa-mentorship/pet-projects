@@ -34,7 +34,9 @@
 3. Заменить значение `Microsoft.NET.Sdk` на `Microsoft.NET.Sdk.Web` в значении `Sdk` тэга `Project` в файле `BookingService.Bookings.Host.csproj`.
 4. Добавить `BookingService.Bookings.Host` в docker-compose.yml 
 	- Сгенерировать dockerfile средствами IDE
-	- Добавить в секцию `services` docker-compose.yml сервис booking-service_bookings-host
+	- Добавить в секцию `services` docker-compose.yml сервис booking-service_bookings-host. Секция должна содержать:
+		- Ключ `container_name` в именем контейнера `bookings-host`
+		- Раздел `build` для сборки образа проекта `BookingService.Bookings.Host` с ключами `context` и `dockerfile`
 5. Создать классы `Startup.cs` и `HostBuilderFactory.cs` в сборке `BookingService.Bookings.Host`
    	- `Startup` должен содержать настройку сервиса
 	- `HostBuilderFactory` должен содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api) и класса `Startup`
@@ -59,6 +61,7 @@
 [Serilog ASP.NET Core github repo](https://github.com/serilog/serilog-aspnetcore)  
 [.NET Generic Host in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) - Использование HostBuilder  
 [Docker Compose Overview](https://docs.docker.com/compose/)  
+[Git aliases](https://git-scm.com/book/en/v2/Git-Basics-Git-Aliases)
 
 # Недели 3 - 4: Создание API и абстракций бизнес-логики приложения
 
