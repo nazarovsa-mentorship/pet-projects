@@ -35,7 +35,9 @@
 4. Добавить `BookingService.Bookings.Host` в docker-compose.yml 
 	- Сгенерировать dockerfile средствами IDE
 	- Добавить в секцию `services` docker-compose.yml сервис booking-service_bookings-host
-5. В сборке `BookingService.Bookings.Host` создать классы `Startup.cs` и `HostBuilderFactory.cs`, который будет содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api)
+5. Создать классы `Startup.cs` и `HostBuilderFactory.cs` в сборке `BookingService.Bookings.Host`
+   	- `Startup` должен содержать настройку сервиса
+	- `HostBuilderFactory` должен содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api) и класса `Startup`
 6. Добавить Swagger
 7. Добавить файл конфигурации `appsettings.Production.json`, который будет использоваться для настройки Production окружения во время запуска приложения в docker-compose.
 8. Добавить логирование с Serilog в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
