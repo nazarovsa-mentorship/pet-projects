@@ -41,7 +41,10 @@
    	- `Startup` должен содержать настройку сервиса
 	- `HostBuilderFactory` должен содержать статичный метод, возвращающий сконфигурированный хост с использованием [Generic Host](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-8.0) (Не используем minimal-api) и класса `Startup`
 6. Добавить Swagger
-7. Добавить файл конфигурации `appsettings.Production.json`, который будет использоваться для настройки Production окружения во время запуска приложения в docker-compose.
+7. Добавить файлы конфигурации:
+    - `appsettings.json` - общий файл конфигурации.
+    - `appsettings.Development.json` - файл конфигурации для настройки Development окружения во время запуска приложения в ide.
+    - `appsettings.Production.json` - файл конфигурации для настройки Production окружения во время запуска приложения в docker-compose.
 8. Добавить логирование с Serilog в приложение вызовом `UseSerilog` на HostBuilderFactory. Serilog должен быть сконфигурирован следующим образом:
 	- Конфигурироваться из конфигурации приложения (файла appsettings.json)
 	- Использовать минимальный уровень логирования по умолчанию `Information` (задается в appsettings.json)
