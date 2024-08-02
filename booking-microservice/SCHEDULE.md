@@ -21,12 +21,11 @@
 
 ## Задача
 
-1. Создать каталог `booking-bookings` для проекта:
-	- Скопировать в него файл docker-compose.yml и каталог `docker-compose-mount` из репозитория
-	- Создать пустой solution `BookingService.Bookings` в созданном каталоге.
-	- В каталоге с созданным solution создать каталог `src`. В нем будут располагаться каталоги с сборками из пункта 2.
-	- В каталоге с созданным solution создать каталог `tests`. В нем будут располагаться каталоги с сборками тестов.
-2. В созданном solution создать проекты в каталоге `src`: 
+1. Создать пустой solution `BookingService.Bookings`:
+	- Скопировать файл docker-compose.yml и каталог `docker-compose-mount` из репозитория в каталог с созданным solution (с файлом `BookingService.Bookings.sln`)
+	- Создать каталог `src` в каталоге с созданным solution. В нем будут располагаться каталоги с сборками из пункта 2.
+	- Создать каталог `tests` в каталоге с созданным solution . В нем будут располагаться каталоги с сборками тестов.
+2. Создать проекты в каталоге `src` в созданном solution : 
 	- Консольное приложение: `BookingService.Bookings.Host` - хост приложения
 	- Библиотека классов: `BookingService.Bookings.Api.Contracts` - публичные контракты приложения
 	- Библиотека классов: `BookingService.Bookings.AppServices` - сервисный слой
