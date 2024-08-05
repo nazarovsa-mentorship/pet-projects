@@ -78,7 +78,7 @@
 3. Создать каталог `Bookings/Requests` в сборке `BookingService.Bookings.Api.Contracts`, в котором создать запросы:
 	- `CreateBookingRequest` - запрос на создание бронирования
 	- `GetBookingsByFilterRequest` - запрос на получение бронирований по фильтру 
-4. Создать статический класс `WebRoutes` в сборке `BookingService.Bookings.Api.Contracts` в корневом каталоге `Bookings`. Он будет для описания путей контроллера. Класс должен содержать константы для базового пути контроллера, а также всех методов:
+4. Создать статический класс `WebRoutes` в сборке `BookingService.Bookings.Api.Contracts` в корневом каталоге `Bookings`. Он будет содержать значения путей для контроллера. Класс должен содержать константы для базового пути контроллера, а также всех методов:
    - `BasePath` - Базовый путь - `api/bookings`.
    - `Create` - Путь для создания бронирования, `BasePath + "/create"`.
    - `GetById` - Путь для получения бронирования по id, `BasePath + "/{id}"`.
