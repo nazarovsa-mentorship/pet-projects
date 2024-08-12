@@ -149,10 +149,13 @@
 1. Создать проекты в каталоге `src` в solution:
 	- Библиотека классов: `BookingService.Booking.Domain` - сборка для хранения бизнес-логики
 	- Библиотека классов: `BookingService.Booking.Domain.Contracts` - сборка для хранения общих компонентов бизнес-логики
-2. Создать каталог `Bookings` в сборке `BookingService.Booking.Domain.Contracts`
-3. Переместить созданные ранее enums, относящиеся к `BookingData` из сборки `BookingService.Booking.Api.Contracts` в каталог `Bookings` сборки `BookingService.Booking.Domain.Contracts`
-4. Добавить зависимость от сборки `BookingService.Booking.Domain.Contracts` в `BookingService.Booking.Api.Contracts`
-5. Создать каталог `Bookings` в сборке `BookingService.Booking.Domain`
+2. Создать каталог `Dates` в сборке `BookingService.Booking.AppServices`
+	- Создать интерфейс `ICurrentDateTimeProvider` и его реализацию `DefaultCurrentDateTimeProvider` в каталоге `Dates`
+	- Зарегистрировать `DefaultCurrentDateTimeProvider` как реализвацию `ICurrentDateTimeProvider` в DI контейнере с уровнем жизни `Singleton` в методе `AddAppServices` из предыдущей недели
+3. Создать каталог `Bookings` в сборке `BookingService.Booking.Domain.Contracts`
+4. Переместить созданные ранее enums, относящиеся к `BookingData` из сборки `BookingService.Booking.Api.Contracts` в каталог `Bookings` сборки `BookingService.Booking.Domain.Contracts`
+5. Добавить зависимость от сборки `BookingService.Booking.Domain.Contracts` в `BookingService.Booking.Api.Contracts`
+6. Создать каталог `Bookings` в сборке `BookingService.Booking.Domain`
    - Создать класс `BookingAggregate` в каталоге `Bookings` сбокри `BookingService.Booking.Domain`
    - Реализовать в `BookingAggregate` поля необходимые для выполнения бизнес-логики (см. требования в общем репозитории)
    - Реализовать API класса `BookingAggregate` для обслуживания бизнес логики
@@ -160,13 +163,12 @@
      - Статический метод `Initialize`, возвращающий `BookingAggregate` и принимающий аргументы необходимые для создания нового экземпляра класса. Должен проверять входные аргументы на валидность и возвращать результат вызова приватный конструктора.
      - Метод `Confirm`, который будет переводить бронирование в статус "Подтверждено"
      - Метод `Cancel`, кторый будет переводить бронирование в статус "Отменено"
-6. Создать в solution каталог `_Tests` через IDE
-7. Создать проект тестов `BookingService.Booking.Domain.UnitTests` в solution-каталоге `_Tests`. Проект должен находиться в каталоге файловой системы `tests`
-8. Создать файл `BookingAggregateTests.cs` с классом `BookingAgregateTests` в `BookingService.Booking.Domain.UnitTests`
-9. Реализовать Unit-тесты на бизнес-логику `BookingAggregate` в классе `BookingAgregateTests`. 
+7. Создать в solution каталог `_Tests` через IDE
+8. Создать проект тестов `BookingService.Booking.Domain.UnitTests` в solution-каталоге `_Tests`. Проект должен находиться в каталоге файловой системы `tests`
+9.  Создать файл `BookingAggregateTests.cs` с классом `BookingAgregateTests` в `BookingService.Booking.Domain.UnitTests`
+10. Реализовать Unit-тесты на бизнес-логику `BookingAggregate` в классе `BookingAgregateTests`. 
    - Метод `Initialize` должен быть покрыт тестами проверяющими валидацию входных параметров и создания экземпляра класса
    - Публичные методы бизнес-логики класса должны быть покрыты тестами, которые проверяют минимум 2 сценария: положительный и отрицательный
-10. 
 
 ## Критерии оценки
 
