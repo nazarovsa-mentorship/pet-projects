@@ -186,6 +186,44 @@
 
 # Недели 7 - 8: 
 
+## Цель
+
+Сформировать навыки:
+- Запуск PostgreSQL в docker-compose
+- Использование EntityFramework Core для доступа к СУБД
+- Использование миграций EntityFramework Core
+- Реализация паттернов репозиторий и unit-of-work
+
+## Задача
+
+1. Создать интерфейс `IBookingsRepository` в проекте `BookingService.Booking.Domain`. Интерфейс должен содержать следующие методы:
+   - Создание бронирования
+   - Получение бронирования по идентификатору
+   - Обновление бронирования
+   - Удаление бронирования
+2. Создать проекты в каталоге `src` в solution: 
+   - Консольное приложение: `BookingService.Booking.Migrator` - хост выполнения миграций
+   - Библиотека классов: `BookingService.Booking.Persistence` - сборка доступа к данным
+   - В сборку `BookingService.Booking.Migrator` добавить ссылку на `BookingService.Booking.Persistence`
+   - В сборку `BookingService.Booking.Persistence` добавить ссылку на `BookingService.Booking.Domain`
+   - В сборку `BookingService.Booking.Host` добавить ссылку на `BookingService.Booking.Persistence`
+3. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore`, `Microsoft.EntityFrameworkCore.Design`, `Microsoft.EntityFrameworkCore.Relational` и `Npgsql.EntityFrameworkCore.PostgreSQL` в проект `BookingService.Booking.Persistence`
+4. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore.Design` и `Npgsql.EntityFrameworkCore.PostgreSQL` в проект `BookingService.Booking.Migrator`
+5. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
+6. Создать класс `BookingCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
+   - Идентификатор - колонка `id` типа `bigserial`,
+   - Статус - колонка `status` типа `int`
+   - Идентификатор пользователя, создавшего бронирование, - колонка `user_id` типа `bigint`
+   - Идентификатор ресурса - колонка `resource_id` типа `bigint`
+   - Дата начала бронирования - колонка `start_date` типа `???`
+   - Дата окончания бронирования - колонка `end_date` типа `???`
+   - Дата и время создания бронирования - колонка `created_at_date_time` типа `timestamptz`
+7. Создать класс `BookingsContext` наследующий от `DbContext` в проекте `BookingService.Booking.Persistence`. Класс должен содержать публичное поле `Bookings` типа `DbSet<BookingAggregate>`.
+8. Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
+9.  
+
+## Критерии оценки
+
 # Недели 9 - 10
 
 # Недели 11 - 12
