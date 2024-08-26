@@ -220,7 +220,11 @@
    - Дата и время создания бронирования - колонка `created_at_date_time` типа `timestamptz`
 7. Создать класс `BookingsContext` наследующий от `DbContext` в проекте `BookingService.Booking.Persistence`. Класс должен содержать публичное поле `Bookings` типа `DbSet<BookingAggregate>`.
 8. Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
-9.  
+9. // TODO: Создать миграции в миграторе
+10. // TODO: Создать репозиторий
+11. // TODO: Создать UnitOfWork
+12. // TODO: Создать методы расширения для подключения инфраструктуры БД в хост
+13. // TODO: Соединить БЛ и вызовы репозитория в сервисном слое
 
 ## Критерии оценки
 
