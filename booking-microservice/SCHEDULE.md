@@ -184,51 +184,161 @@
 [Блеск и нищета модели предметной области](https://habr.com/ru/companies/jugru/articles/503868/)  
 Владимир Хориков: Принципы unit-тестирования - Глава 1, 2, 3
 
-# Недели 7 - 8: 
+# Недели 7 - 8: EntityFramework Core - ORM
 
 ## Цель
 
 Сформировать навыки:
-- Запуск PostgreSQL в docker-compose
-- Использование EntityFramework Core для доступа к СУБД
-- Использование миграций EntityFramework Core
+- Использование EntityFramework Core для взаимодействия с СУБД
 - Реализация паттернов репозиторий и unit-of-work
 
 ## Задача
 
-1. Создать интерфейс `IBookingsRepository` в проекте `BookingService.Booking.Domain`. Интерфейс должен содержать следующие методы:
-   - Создание бронирования
-   - Получение бронирования по идентификатору
-   - Обновление бронирования
-   - Удаление бронирования
-2. Создать проекты в каталоге `src` в solution: 
-   - Консольное приложение: `BookingService.Booking.Migrator` - хост выполнения миграций
+1. Создать проекты в каталоге `src` в solution: 
    - Библиотека классов: `BookingService.Booking.Persistence` - сборка доступа к данным
-   - В сборку `BookingService.Booking.Migrator` добавить ссылку на `BookingService.Booking.Persistence`
+   - Библиотека классов: `BookingService.Booking.AppServices.Contracts` - сборка контрактов сервисного слоя
    - В сборку `BookingService.Booking.Persistence` добавить ссылку на `BookingService.Booking.Domain`
    - В сборку `BookingService.Booking.Host` добавить ссылку на `BookingService.Booking.Persistence`
-3. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore`, `Microsoft.EntityFrameworkCore.Design`, `Microsoft.EntityFrameworkCore.Relational` и `Npgsql.EntityFrameworkCore.PostgreSQL` в проект `BookingService.Booking.Persistence`
-4. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore.Design` и `Npgsql.EntityFrameworkCore.PostgreSQL` в проект `BookingService.Booking.Migrator`
-5. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
-6. Создать класс `BookingCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
+2. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore (8.0.8)`, `Microsoft.EntityFrameworkCore.Design (8.0.8)`, `Microsoft.EntityFrameworkCore.Relational (8.0.8)` и `Npgsql.EntityFrameworkCore.PostgreSQL (8.0.4)` в проект `BookingService.Booking.Persistence`
+3. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
+4. Создать класс `BookingAggregateCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
    - Идентификатор - колонка `id` типа `bigserial`,
-   - Статус - колонка `status` типа `int`
-   - Идентификатор пользователя, создавшего бронирование, - колонка `user_id` типа `bigint`
-   - Идентификатор ресурса - колонка `resource_id` типа `bigint`
-   - Дата начала бронирования - колонка `start_date` типа `???`
-   - Дата окончания бронирования - колонка `end_date` типа `???`
-   - Дата и время создания бронирования - колонка `created_at_date_time` типа `timestamptz`
-7. Создать класс `BookingsContext` наследующий от `DbContext` в проекте `BookingService.Booking.Persistence`. Класс должен содержать публичное поле `Bookings` типа `DbSet<BookingAggregate>`.
-8. Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
-9. // TODO: Создать миграции в миграторе
-10. // TODO: Создать репозиторий
-11. // TODO: Создать UnitOfWork
-12. // TODO: Создать методы расширения для подключения инфраструктуры БД в хост
-13. // TODO: Соединить БЛ и вызовы репозитория в сервисном слое
+   - Статус - колонка `status`
+   - Идентификатор пользователя, - колонка `user_id`
+   - Идентификатор ресурса - колонка `resource_id`
+   - Дата начала бронирования - колонка `start_date`
+   - Дата окончания бронирования - колонка `end_date`
+   - Дата и время создания бронирования - колонка `created_at_date_time` 
+5. Создать класс `BookingsContext` наследующий от `DbContext` в проекте `BookingService.Booking.Persistence`. Класс должен содержать `Bookings` типа `DbSet<BookingAggregate>` с публичным сеттером и геттером.
+6. Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
+7. Создать каталог Добавить реализацию `IRepository<T>` в 
+8. Создать интерфейс `IBookingsRepository` в каталоге `Bookings` проекта `BookingService.Booking.Domain`. Интерфейс должен содержать следующие методы:
+   - Создание бронирования: принимает `BookingAggregate`, не возвращает ничего
+   - Получение бронирования по идентификатору: принимает идентификатор и `CancellationToken`, возвращает `ValueTask<BookingAggregate?>`
+   - Обновление бронирования: принимает `BookingAggregate`, не возвращает ничего
+9. Создать интерфейс `IUnitOfWork` в проекте `BookingService.Booking.Domain`. Он должен содержать следующие члены:
+   - Свойство `public IBookingsRepository BookingsRepository { get; }`
+   - Метод `Task CommitAsync(CancellationToken cancellationToken = default)`
+10. Создать класс `BookingsRepository`, реализующий `IBookingsRepository`, в проекте `BookingService.Booking.Persistence`
+```csharp
+public class BookingsRepository : IBookingsRepository
+{
+  private DbSet<BookingAggregate> _dbSet;
+
+  public BookingsRepository(BookingContext context)
+  {
+    _dbSet = context.Bookings;
+  }
+
+  public void Create(BookingAggregate aggregate)
+  {
+    _dbSet.Add(aggregate);
+  }
+
+  public ValueTask<BookingAggregate?> GetById(long id, CancellationToken cancellationToken = default)
+  {
+    return _dbSet.FindAsync(id, cancellationToken);
+  }
+
+  public void Update(BookingAggregate aggregate)
+  {
+    _dbSet.Attach(aggregate);
+    _dbSet.Entry(aggregate).State = EntityState.Modified;
+  }
+}
+```
+12. Создать класс `UnitOfWork`, реализующий `IUnitOfWork` в проекте `BookingService.Booking.Persistence`.
+```csharp
+public class UnitOfWork : IUnitOfWork
+{
+  private readonly BookingContext _dbContext;
+
+  public IBookingsRepository BookingsRepository { get; }
+
+  public UnitOfWork(BookingContext dbContext, IBookingsRepository bookingsRepository)
+  {
+    _dbContext = dbContext;
+    BookingsRepository = bookingsRepository;
+  }
+
+  public async Task CommitAsync(CancellationToken cancellationToken = default)
+  {
+    await _dbContext.SaveChangesAsync(cancellationToken);
+  }
+}
+```
+13. Создать класс `ServiceCollectionExtensions` в сборке `BookingService.Booking.Persistence`
+14. Создать метод расшинения `AddPersistence` для регистрации зависимостей в DI:
+```csharp
+  public static IServiceCollection AddPersistence(this IServiceCollection services, string connectionString)
+  {
+    if (services == null)
+      throw new ArgumentNullException(nameof(services));
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+      throw new ArgumentNullException(nameof(connectionString));
+
+    services.AddScoped<IBookingsRepository, BookingsRepository>();
+    services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+    services.AddDbContext<BookingsContext>(
+      (ctx, context) =>
+      {
+        context.UseNpgsql(connectionString)
+          .UseLoggerFactory(ctx.GetRequiredService<ILoggerFactory>());
+      }
+    );
+
+    return services;
+  }
+```
+15. Добавить секцию со строками подключения в `appsettings.Development.json` и `appsettings.Production.json` в сборке `BookingService.Booking.Host`
+```csharp
+"ConnectionStrings": {
+   "BookingsContext": "значение_строки_подключения"
+}
+```
+16. Добавить вызов метода `AddPersistence` в метод `ConfigureServices` класса `Startup.cs` сборки `BookingService.Booking.AppServices.Host`. В качестве аргумента передать строку подключения полученную из конфигурации по имени `BookingsContext` с помощью метода `GetConnectionString`, вызванного на `IConfiguration`.
+17. Перенести интерфейс `IBookingQueries` в каталог `Bookings` сборки `BookingService.Booking.AppServices.Contracts`
+18. Перенести класс `BookingQueries` в сборку `BookingService.Booking.Persistence`.
+19. Перенести регистрацию `BookingQueries` в DI из метода расширения в сборке `BookingService.Booking.AppServices` в метод `AddPersistence` сборки `BookingService.Booking.Persistence`
+20. Реализовать класс `BookingsQueries` с использованием `BookingContext` для получения доступа к БД. При наличии отличных от `null` значений аргументов метода, дополнять `IQueriable` запрос условиями по принципе И.
+21. Реализовать класс `BookingsService` с использованием `IUnitOfWork` и его поля `IBookingsRepository` для взаимодействия с БД. Методы изменеяющие состояние агрегата сначала должны загрузить его из базы данных, а после внесения изменений сохранить состояние вызовом метода `IBookingsRepository.Update`. Когда все изменения выполнен, необходимо зафиксировать их в БД вызовом метода `IUnitOfWork.CommitAsync`.
 
 ## Критерии оценки
 
-# Недели 9 - 10
+- Создан `BookingsContext` и конфигурация агрегата `BookingAggregate`. 
+  - Поля агрегата смапплены на колонки в БД согласно заданию
+  - Конфигурация зарегистрирована в методе `OnModelCreating` контекста
+- Реализован паттерн UnitOfWork
+- Реализован паттерн Repository для `BookingAggregate`
+- Класс `BookingQueries` перенесен в сборку `BookingService.Booking.Persistence`. Его реализация предоставляет возможность получать данные из БД с использованием `BookingsContext` согласно указанной в основном задании логике.
+- Реализован метод расширения `AddPersistence` для регистрации зависимостей для доступа к БД в DI. Метод вызван в `ConfigureServices` класса `Startup.cs`
+- Реализована логика сервиса `BookignsService` с использованием `UnitOfWork` для доступа и обновления данных.
+
+# Недели 9 - 10: EntityFramework Core - миграции
+
+Сформировать навыки:
+- Запуск PostgreSQL в docker-compose
+- Использование миграций EntityFramework Core
+
+## Задача
+
+1. Создать проекты в каталоге `src` в solution: 
+   - Консольное приложение: `BookingService.Booking.Migrator` - хост выполнения миграций
+   - В сборку `BookingService.Booking.Migrator` добавить ссылку на `BookingService.Booking.Persistence`
+2. Добавить nuget-пакеты `Microsoft.EntityFrameworkCore.Design` и `Npgsql.EntityFrameworkCore.PostgreSQL` в проект `BookingService.Booking.Migrator`
+3. TODO: Создать миграции в миграторе
+4. TODO: Поднять БД в компоузе
+5. TODO: Добавить мигратор в компоуз 
+6. TODO: Запуск миграций в приложении
+```csharp
+using (var scope = host.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BookingsContext>();
+    db.Database.Migrate();
+}
+```
 
 # Недели 11 - 12
 
