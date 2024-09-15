@@ -337,16 +337,15 @@ public class UnitOfWork : IUnitOfWork
      - POSTGRES_DB: `booking_service_bookings`
      - POSTGRES_USER: `bookings_admin`
      - POSTGRES_PASSWORD: `admin_bookings`
-     - PGDATA: `/data/postgres/bookings`
+     - PGDATA: `/data/postgres/`
    - Добавить секцию с healhcheck по аналогии с конфигурацией для `booking-service_catalog-db`
-2. Изменить значение переменной окружения PGDATA на `/data/postgres/catalog` контейнера `booking-service_catalog-db`
-3. Добавить зависимости (секция depends_on) контейнера `booking-service_bookings-host` от `booking-service_bookings-db` и `booking-service_rabbitmq` по аналогии с секцией `booking-service_catalog-host`. 
-4. Запустить контейнер `booking-service_bookings-db` с помощью команды `docker compose up -d booking-service_bookings-db` в каталоге с `docker-compose.yml`
-5. Создать проекты в каталоге `src` в solution: 
+2. Добавить зависимости (секция depends_on) контейнера `booking-service_bookings-host` от `booking-service_bookings-db` и `booking-service_rabbitmq` по аналогии с секцией `booking-service_catalog-host`. 
+3. Запустить контейнер `booking-service_bookings-db` с помощью команды `docker compose up -d booking-service_bookings-db` в каталоге с `docker-compose.yml`
+4. Создать проекты в каталоге `src` в solution: 
    - Библиотека классов: `BookingService.Booking.Persistence` - сборка доступа к данным
    - В сборку `BookingService.Booking.Persistence` добавить ссылку на `BookingService.Booking.Domain`
    - В сборку `BookingService.Booking.Host` добавить ссылку на `BookingService.Booking.Persistence`
-6. Добавить nuget-пакеты в проект `BookingService.Booking.Persistence`
+5. Добавить nuget-пакеты в проект `BookingService.Booking.Persistence`
    - `Microsoft.Extensions.Configuration` версии 8.0.0
    - `Microsoft.Extensions.Configuration.Binder` версии 8.0.0
    - `Microsoft.Extensions.Configuration.Json` версии 8.0.0
@@ -354,8 +353,8 @@ public class UnitOfWork : IUnitOfWork
    - `Microsoft.EntityFrameworkCore.Design` версии 8.0.8
    - `Microsoft.EntityFrameworkCore.Relational` версии 8.0.8
    - `Npgsql.EntityFrameworkCore.PostgreSQL` версии 8.0.8
-7. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
-8. Создать класс `BookingAggregateCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
+6. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
+7. Создать класс `BookingAggregateCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
    - Идентификатор - колонка `id` типа `bigint`; Первичный ключ таблицы
    - Статус - колонка `status` типа `int`
    - Идентификатор пользователя, - колонка `user_id` типа `bigint`
@@ -363,9 +362,9 @@ public class UnitOfWork : IUnitOfWork
    - Дата начала бронирования - колонка `start_date` типа `date`
    - Дата окончания бронирования - колонка `end_date` типа `date`
    - Дата и время создания бронирования - колонка `created_at_date_time` типа `timestamptz`
-9.  Создать класс `BookingsContext`, наследующий от `DbContext`, в проекте `BookingService.Booking.Persistence`. Класс должен содержать `Bookings` типа `DbSet<BookingAggregate>` с публичным сеттером и геттером.
-10. Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
-11. Создать класс `DesignTimeDbContextFactory` в проекте `BookingService.Booking.Persistence` 
+8.  Создать класс `BookingsContext`, наследующий от `DbContext`, в проекте `BookingService.Booking.Persistence`. Класс должен содержать `Bookings` типа `DbSet<BookingAggregate>` с публичным сеттером и геттером.
+9.  Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
+10. Создать класс `DesignTimeDbContextFactory` в проекте `BookingService.Booking.Persistence` 
 ```csharp
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BookingsContext>
 {
@@ -388,7 +387,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BookingsCo
     }
 }
 ```
-12. Создать файл `appsettings.json` в проекте `BookingService.Booking.Persistence`.
+1.  Создать файл `appsettings.json` в проекте `BookingService.Booking.Persistence`.
 ```json
 {
   "ConnectionStrings": {
@@ -404,9 +403,9 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BookingsCo
       </None>
     </ItemGroup>
 ```
-13. Установить утилиту dotnet-ef. Для этого выполнить команду `dotnet tool install -g dotnet-ef`.
-14. Создать инициальную миграцию с именем `InitialMigration` с помощью dotnet-ef в проекте `BookingService.Booking.Persistence`
-15.  Применить миграцию к локальной БД вызовом команды `dotnet ef database update` в каталоге проекта `BookingService.Booking.Persistence`.
+1.  Установить утилиту dotnet-ef. Для этого выполнить команду `dotnet tool install -g dotnet-ef`.
+2.  Создать инициальную миграцию с именем `InitialMigration` с помощью dotnet-ef в проекте `BookingService.Booking.Persistence`
+3.   Применить миграцию к локальной БД вызовом команды `dotnet ef database update` в каталоге проекта `BookingService.Booking.Persistence`.
 
 ## Критерии оценки
 
