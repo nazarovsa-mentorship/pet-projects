@@ -317,7 +317,7 @@ public class UnitOfWork : IUnitOfWork
 - Реализована логика сервиса `BookignsService` с использованием `UnitOfWork` для доступа и обновления данных.
 
 
-# Недели 7 - 8: EntityFramework Core
+# Недели 7 - 8: Создание слоя взаимодействия с БД; Библиотека EntityFramework Core
 
 ## Цель
 
@@ -364,30 +364,8 @@ public class UnitOfWork : IUnitOfWork
    - Дата и время создания бронирования - колонка `created_at_date_time` типа `timestamptz`
 8.  Создать класс `BookingsContext`, наследующий от `DbContext`, в проекте `BookingService.Booking.Persistence`. Класс должен содержать `Bookings` типа `DbSet<BookingAggregate>` с публичным сеттером и геттером.
 9.  Переопределить метод `OnModelCreating` в `BookingsContext`: добавить регистрацию `BookingConfiguration` с помощью метода `ApplyConfiguration`, вызванного на аргументе метода `ModelBuilder`; Не забыть вызвать `base.OnModelCreating(modelBuilder)` в конце переопределенного метода
-10. Создать класс `DesignTimeDbContextFactory` в проекте `BookingService.Booking.Persistence` 
-```csharp
-public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BookingsContext>
-{
-    public BookingsContext CreateDbContext(string[] args)
-    {
-        var optionsBuilder = new DbContextOptionsBuilder<BookingsContext>();
-
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        var connectionString = configuration.GetConnectionString(nameof(BookingsContext));
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException($"ConnectionString for `{nameof(BookingsContext)}` not found");
-
-        optionsBuilder.UseNpgsql(connectionString);
-
-        return new BookingsContext(optionsBuilder.Options);
-    }
-}
-```
-1.  Создать файл `appsettings.json` в проекте `BookingService.Booking.Persistence`.
+10. Создать класс `DesignTimeDbContextFactory` в проекте `BookingService.Booking.Persistence` для конфигурации DbContext во времени применения миграций 
+11.  Создать файл `appsettings.json` в проекте `BookingService.Booking.Persistence`.
 ```json
 {
   "ConnectionStrings": {
@@ -403,9 +381,9 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BookingsCo
       </None>
     </ItemGroup>
 ```
-1.  Установить утилиту dotnet-ef. Для этого выполнить команду `dotnet tool install -g dotnet-ef`.
-2.  Создать инициальную миграцию с именем `InitialMigration` с помощью dotnet-ef в проекте `BookingService.Booking.Persistence`
-3.   Применить миграцию к локальной БД вызовом команды `dotnet ef database update` в каталоге проекта `BookingService.Booking.Persistence`.
+12.  Установить утилиту dotnet-ef. Для этого выполнить команду `dotnet tool install -g dotnet-ef`.
+13.  Создать инициальную миграцию с именем `InitialMigration` с помощью dotnet-ef в проекте `BookingService.Booking.Persistence`
+14.   Применить миграцию к локальной БД вызовом команды `dotnet ef database update` в каталоге проекта `BookingService.Booking.Persistence`.
 
 ## Критерии оценки
 
@@ -540,6 +518,15 @@ public class UnitOfWork : IUnitOfWork
 - Класс `BookingQueries` перенесен в сборку `BookingService.Booking.Persistence`. Его реализация предоставляет возможность получать данные из БД с использованием `BookingsContext` согласно указанной в основном задании логике.
 - Реализован метод расширения `AddPersistence` для регистрации зависимостей для доступа к БД в DI. Метод вызван в `ConfigureServices` класса `Startup.cs`
 - Реализована логика сервиса `BookignsService` с использованием `UnitOfWork` для доступа и обновления данных.
+
+## Материалы для изучения
+
+[Oracle: Что такое база данных?](https://www.oracle.com/cis/database/what-is-database/)  
+Днон П. Смит - EntityFramework в действии: главы 1 - 11  
+[Metanit: Управление схемой БД и миграции](https://metanit.com/sharp/entityframeworkcore/2.15.php)  
+[Learn EntityFramework Core](https://www.learnentityframeworkcore.com/)  
+[Learn EntityFramework Core: EF Core Migrations](https://www.learnentityframeworkcore.com/migrations)  
+[ConfigurationExtensions.GetConnectionString(IConfiguration, String) Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.configurationextensions.getconnectionstring?view=net-8.0)
 
 # Недели 11 - 12
 
