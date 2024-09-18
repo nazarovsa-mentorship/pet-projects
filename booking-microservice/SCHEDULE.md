@@ -219,9 +219,9 @@
    - `Microsoft.EntityFrameworkCore` версии 8.0.8
    - `Microsoft.EntityFrameworkCore.Design` версии 8.0.8
    - `Microsoft.EntityFrameworkCore.Relational` версии 8.0.8
-   - `Npgsql.EntityFrameworkCore.PostgreSQL` версии 8.0.8
+   - `Npgsql.EntityFrameworkCore.PostgreSQL` версии 8.0.4
 6. Создать каталог `Configurations` в `BookingService.Booking.Persistence`
-7. Создать класс `BookingAggregateCongiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
+7. Создать класс `BookingAggregateConfiguration`, реализующий от `IEntityTypeConfiguration<BookingAggregate>`, в каталоге `Configurations` проекта `BookingService.Booking.Persistence`. В методе `Configure` выполнить маппинг агрегата `BookingAggregate` на базу данных:
    - Идентификатор - колонка `id` типа `bigint`; Первичный ключ таблицы
    - Статус - колонка `status` типа `int`
    - Идентификатор пользователя, - колонка `user_id` типа `bigint`
