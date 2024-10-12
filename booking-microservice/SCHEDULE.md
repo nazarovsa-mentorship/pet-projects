@@ -274,11 +274,15 @@ create table bookings
 );
 ```
 
-# Недели 9 - 10: Реализация паттернов Repository и UnitOfWork, реализация сервисного слоя приложения
+# Недели 9 - 10: Реализация паттернов Repository и Work, реализация сервисного слоя приложения
+
+## Цель
+
+Сформировать понимание:
+- Назначение паттерна Repository 
+- Назначение паттерна Unit of Work
 
 Сформировать навыки:
-- Реализация паттерна репозиторий 
-- Реализация паттерна unit-of-work
 - Реализация сервисного слоя приложения
 
 ## Задача
@@ -289,7 +293,7 @@ create table bookings
    - Создание бронирования: принимает `BookingAggregate`, не возвращает ничего
    - Получение бронирования по идентификатору: принимает идентификатор и `CancellationToken`, возвращает `ValueTask<BookingAggregate?>`
    - Обновление бронирования: принимает `BookingAggregate`, не возвращает ничего
-2. Создать интерфейс `IUnitOfWork` в проекте `BookingService.Booking.Domain`. Он должен содержать следующие члены:
+2. Создать интерфейс `IUnitOfWOrk` в проекте `BookingService.Booking.Domain`. Он должен содержать следующие члены:
    - Свойство `public IBookingsRepository BookingsRepository { get; }`
    - Метод `Task CommitAsync(CancellationToken cancellationToken = default)`
 3. Создать класс `BookingsRepository`, реализующий `IBookingsRepository`, в проекте `BookingService.Booking.Persistence`
@@ -352,7 +356,7 @@ public class UnitOfWork : IUnitOfWork
       throw new ArgumentNullException(nameof(connectionString));
 
     services.AddScoped<IBookingsRepository, BookingsRepository>();
-    services.AddScoped<IUnitOfWork, UnitOfWork>();
+    services.AddScoped<IUnitOfWOrk, UnitOfWOrk>();
 
     services.AddDbContext<BookingsContext>(
       (ctx, context) =>
@@ -376,11 +380,11 @@ public class UnitOfWork : IUnitOfWork
 10. Перенести класс `BookingQueries` в сборку `BookingService.Booking.Persistence`.
 11. Перенести регистрацию `BookingQueries` в DI из метода расширения в сборке `BookingService.Booking.AppServices` в метод `AddPersistence` сборки `BookingService.Booking.Persistence`
 12. Реализовать класс `BookingsQueries` с использованием `BookingContext` для получения доступа к БД. При наличии отличных от `null` значений аргументов метода, дополнять `IQueriable` запрос условиями по принципе И.
-13. Реализовать класс `BookingsService` с использованием `IUnitOfWork` и его поля `IBookingsRepository` для взаимодействия с БД. Методы изменеяющие состояние агрегата сначала должны загрузить его из базы данных, а после внесения изменений сохранить состояние вызовом метода `IBookingsRepository.Update`. Когда все изменения выполнен, необходимо зафиксировать их в БД вызовом метода `IUnitOfWork.CommitAsync`.
+13. Реализовать класс `BookingsService` с использованием `IUnitOfWOrk` и его поля `IBookingsRepository` для взаимодействия с БД. Методы изменеяющие состояние агрегата сначала должны загрузить его из базы данных, а после внесения изменений сохранить состояние вызовом метода `IBookingsRepository.Update`. Когда все изменения выполнен, необходимо зафиксировать их в БД вызовом метода `IUnitOfWOrk.CommitAsync`.
 
 ## Критерии оценки
 
-- Реализован паттерн UnitOfWork
+- Реализован паттерн Unit of Work
 - Реализован паттерн Repository для `BookingAggregate`
 - Класс `BookingQueries` перенесен в сборку `BookingService.Booking.Persistence`. Его реализация предоставляет возможность получать данные из БД с использованием `BookingsContext` согласно указанной в основном задании логике.
 - Реализован метод расширения `AddPersistence` для регистрации зависимостей для доступа к БД в DI. Метод вызван в `ConfigureServices` класса `Startup.cs`
