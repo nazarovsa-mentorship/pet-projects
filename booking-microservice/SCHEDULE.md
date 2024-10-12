@@ -276,6 +276,8 @@ create table bookings
 
 # Недели 9 - 10: Реализация паттернов Repository и UnitOfWork, реализация сервисного слоя приложения
 
+## Цель
+
 Сформировать навыки:
 - Реализация паттерна репозиторий 
 - Реализация паттерна unit-of-work
@@ -396,6 +398,14 @@ public class UnitOfWork : IUnitOfWork
 [ConfigurationExtensions.GetConnectionString(IConfiguration, String) Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.configurationextensions.getconnectionstring?view=net-8.0)
 
 # Недели 11 - 12
+
+## Цель
+
+## Задача
+
+## Критерии оценки
+
+## Материалы для изучения
 
 # Недели 13 - 14
 
