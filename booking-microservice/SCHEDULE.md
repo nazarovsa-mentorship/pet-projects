@@ -401,15 +401,99 @@ public class UnitOfWork : IUnitOfWork
 [Learn EntityFramework Core: EF Core Migrations](https://www.learnentityframeworkcore.com/migrations)  
 [ConfigurationExtensions.GetConnectionString(IConfiguration, String) Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.configurationextensions.getconnectionstring?view=net-8.0)
 
-# Недели 11 - 12
+# Недели 11 - 12: Синхронное межсервисное взаимоедйствие; Фоновые задачи
 
 ## Цель
 
+Сформировать понимание:
+- Преимущества и недостатки синхронных взаимодействий
+
+Сформировать наывыки:
+- Использование RestEase клиента для взаимодействия с другим сервисом
+- Реализация фоновых задач с использованием класса `BackgroundService`
+
 ## Задача
+
+1. Создать каталог `Options` в `BookingService.Booking.AppServices`
+2. Создать класс `BookingCatalogRestOptions` с полем `BaseAddress` типа `string` в созданном каталоге
+3. Добавить в файлы конфигурации `BookingService.BookingHost` секцию `BookingCatalogRestOptions` с следующими значениями `BaseAddress` для разных сред
+  - `appsettings.Development.json` - "http://localhost:8000"
+  - `appsettings.Production.json` - "http://booking-service_catalog-host:8080"
+4. Подключить nuget-пакеты в `BookingService.Booking.AppServices`:
+   - `BookingService.Catalog.Api.Contracts`
+   - `Microsoft.Extensions.Hosting.Abstractions`
+   - `Microsoft.Extensions.Options.ConfigurationExtensions` 
+   - `Microsoft.Extensions.Http` 
+5. Добавить в метод `AddAppServices` аргумент типа `IConfiguration`
+6. Добавить подключение RestEase клиента для сервиса Catalog в метод `AddAppservices`
+  - Сконфигурировать `BookingCatalogRestOptions` на основании секции конфигурации с помощью метода `Configure<T>`
+  - Зарегистрировать `HttpClient` для RestEase клиента:
+  ```csharp
+    services.AddHttpClient(nameof(BookingCatalogRestOptions),
+      (ctx, client) =>
+      {
+        var options = ctx.GetRequiredService<IOptions<BookingCatalogRestOptions>>().Value;
+        client.BaseAddress = new Uri(options.BaseAddress);
+        client.Timeout = TimeSpan.FromSeconds(90);
+      });
+  ```
+  - Зарегистрировать RestEase клиент для сервиса Catalog:
+  ```csharp
+    services.AddScoped<IBookingJobsController>(ctx =>
+      RestClient.For<IBookingJobsController>(ctx.GetRequiredService<IHttpClientFactory>()        .CreateClient(nameof(BookingCatalogRestOptions))));
+  ```
+7. Добавить свойство `public Guid? CatalogRequestId { get; private set; }` в `BookingAggregate`
+8. Добавить метод `SetCatalogRequestId(Guid catalogRequestId)`:
+   - Бросает `DomainException`, если `catalogRequestId` имеет значение по умолчанию
+   - Устанавливать значение `CatalogRequestId`, если оно null
+   - Бросает `DomainException`, если `CatalogRequestId` уже имеет значение 
+9.  Выполнить маппинг `CatalogRequestId` в `BookingAggregateConfiguration` на базу данных
+10. Создать миграцию `AddCatalogRequestId`
+11. Обновить БД в контейнере запуском `dotnet ef database update`
+12. Внедрить `IBookingJobsController` в `BookingService`
+13. Расширить логику метода `Create`. 
+    - После создания экземпляра `BookingAggregate` создать идентификатор запроса для обращения к сервису Catalog, используя `Guid.NewGuid()`
+    - Присвоить созданный идентификатор полю `CatalogRequestId` созданного агрегата
+    - Выполнить метод `CreateBookingJob` на `IBookingJobsController` для создания задания на подтверждение ресурса в сервисе `Catalog`
+14. Расширить логику метода `Cancel`
+    - Отменить бронирование в сервисе Catalog, если `CatalogRequestId` не равно null. Для простоты считаем, что если значение null, то запрос на бронирование в сервис Catalog не отправлялся, и можно отменить бронирование только в сервисе Booking.
+    - Вызвать метод `CancelBookingJob` на `IBookingJobsController` для отмены бронирования в сервисе каталог.
+15. Создать каталог `Jobs` в каталоге `Bookings` сборки `BookingService.Booking.AppServices`
+16. Создать интерфейс `IBookingsBackgroundServiceHandler` с методом `Handle`, который возвращает `Task` и принимает `CancellationToken`
+17. Создать класс `BookingsBackgroundServiceHandler` реализующий `IBookingsBackgroundServiceHandler`. Метод `Handle` должен реализовывать следующую логику
+    - Получить из БД все агрегаты `Bookings` со статусом `AwaitConfirmation`
+    - Для каждого агрегата:
+      - Вывести в лог сообщение о том, что у агрегата некорреткное состояние, с уровнем `Warning` и перейти к следущему агрегату
+      - Получить статус бронирования ресурса `BookingJobStatus` по `CatalogRequestId` из сервиса Catalog, вызвав метод `GetBookingJobStatusByRequestId` на `IBookingJobsController`
+      - Перевести `BookingsAggregate` в состояние "Подтверждено", если полученный статус `Confirmed`
+      - Перевести `BookignsAggregate` в состояние "Отменено", если полученный статус `Cancelled`
+18. Создать класс `BookingsBackgroundService`, наследующий от `BackgroundService`. Метод ExecuteAsync должен реализовывать следующую логику:
+    - Пока не запрошена отмена `stoppingToken`:
+    - Создать scope через `ISeviceProvider`
+    - Создать экземляр `IBookingsBackgroundServiceHandler` вызовом `scope.ServiceProvider.GetRequiredService<IBookingsBackgroundServiceHandler>()`
+    - Вызвать метод `Handle` полученного экземпляра `IBookingsBackgroundServiceHandler`, передав в него `stoppingToken`
+    - После успешного вызова поставить работу на ожидание на 5 секунд, через `Task.Delay` 
+    - Вышеописанная логика должна быть обернута в блок try. В случае возникновения ошибки необходимо залогировать сообщение с уровнем `Error` и поставить работу на ожидание на 1 минуту, через `Task.Delay`
+19. В методе AddAppServices:
+    - Зарегистрировать `BookingsBackgroundServiceHandler` как реализацию `IBookingsBackgroundServiceHandler` с временем жизни scoped
+    - Зарегистрировать `BookingsBackgroundService` через метод `AddHostedService`
+
+## Дополнительная информация
+
+- В методе создания задачи сервиса каталог предусмотрена проверка идентификатора ресурса, поэтому после расщирения логики создания бронирования, нужно брать идентификатор ресурса из результата ответа метода `api/hotels` сервиса Catalog. Swagger доступен по адресу `http://localhost:8000/swagger`.
 
 ## Критерии оценки
 
+- Реализованы синхронные взаимодействия с сервисом Catalog:
+  - В методе создания бронирования
+  - В методе отмены бронирования
+- Реализован BackgroundService, выполняющий проверку статуса бронирования в сервисе каталог и изменяющий состояние агрегата бронирования
+
 ## Материалы для изучения
+
+[Dependency injection in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-8.0)  
+[RestEase github page](https://github.com/canton7/RestEase)  
+[OpenApi](https://www.openapis.org)  
 
 # Недели 13 - 14
 
