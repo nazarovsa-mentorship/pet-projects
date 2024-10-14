@@ -460,21 +460,24 @@ public class UnitOfWork : IUnitOfWork
     - Вызвать метод `CancelBookingJob` на `IBookingJobsController` для отмены бронирования в сервисе каталог.
 15. Создать каталог `Jobs` в каталоге `Bookings` сборки `BookingService.Booking.AppServices`
 16. Создать интерфейс `IBookingsBackgroundServiceHandler` с методом `Handle`, который возвращает `Task` и принимает `CancellationToken`
-17. Создать класс `BookingsBackgroundServiceHandler` реализующий `IBookingsBackgroundServiceHandler`. Метод `Handle` должен реализовывать следующую логику
-    - Получить из БД все агрегаты `Bookings` со статусом `AwaitConfirmation`
+17. Создать интерфейс `IBookingsBackgroundQueries` в каталоге `Bookings` сборки `BookingService.Booking.Domain`. Интерфейс должен содержать метод `GetConfirmationAwaitingBookings`, получающий количество возвращаемых значений (значение по умолчанию 10) и возвращающий `IReadOnlyCollection<BookingAggregate>`. Агрегаты должны быть отсортированы по убыванию Id. То есть, метод возвращает n бронирований в статусе "Ожидает подтверждения", отсортированных по убыванию идентификатора. 
+18. Создать класс `BookingsBackgroundQueries`, реализующий `IBookingsBackgroundQueries`, в сборке `BookingService.Booking.Persistence`. Для взаимодействия с БД использовать `BookingsContext`
+19. Зарегистрировать `BookingsBackgroundQueries` как реализацию `IBookingsBackgroundQueries` в методе `AddPersistence` сборки `BookingsService.Booking.Persistence`
+20. Создать класс `BookingsBackgroundServiceHandler` реализующий `IBookingsBackgroundServiceHandler`. Метод `Handle` должен реализовывать следующую логику
+    - Получить из БД 10 агрегатов `Bookings` со статусом `AwaitConfirmation` с использованием интерфейса `IBookingsBackgroundQueries`
     - Для каждого агрегата:
       - Вывести в лог сообщение о том, что у агрегата некорреткное состояние, с уровнем `Warning` и перейти к следущему агрегату
       - Получить статус бронирования ресурса `BookingJobStatus` по `CatalogRequestId` из сервиса Catalog, вызвав метод `GetBookingJobStatusByRequestId` на `IBookingJobsController`
       - Перевести `BookingsAggregate` в состояние "Подтверждено", если полученный статус `Confirmed`
       - Перевести `BookignsAggregate` в состояние "Отменено", если полученный статус `Cancelled`
-18. Создать класс `BookingsBackgroundService`, наследующий от `BackgroundService`. Метод ExecuteAsync должен реализовывать следующую логику:
+21. Создать класс `BookingsBackgroundService`, наследующий от `BackgroundService`. Метод ExecuteAsync должен реализовывать следующую логику:
     - Пока не запрошена отмена `stoppingToken`:
     - Создать scope через `ISeviceProvider`
     - Создать экземляр `IBookingsBackgroundServiceHandler` вызовом `scope.ServiceProvider.GetRequiredService<IBookingsBackgroundServiceHandler>()`
     - Вызвать метод `Handle` полученного экземпляра `IBookingsBackgroundServiceHandler`, передав в него `stoppingToken`
     - После успешного вызова поставить работу на ожидание на 5 секунд, через `Task.Delay` 
     - Вышеописанная логика должна быть обернута в блок try. В случае возникновения ошибки необходимо залогировать сообщение с уровнем `Error` и поставить работу на ожидание на 1 минуту, через `Task.Delay`
-19. В методе AddAppServices:
+22. В методе AddAppServices:
     - Зарегистрировать `BookingsBackgroundServiceHandler` как реализацию `IBookingsBackgroundServiceHandler` с временем жизни scoped
     - Зарегистрировать `BookingsBackgroundService` через метод `AddHostedService`
 
