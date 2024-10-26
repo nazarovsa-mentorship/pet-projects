@@ -401,7 +401,7 @@ public class UnitOfWork : IUnitOfWork
 [Learn EntityFramework Core: EF Core Migrations](https://www.learnentityframeworkcore.com/migrations)  
 [ConfigurationExtensions.GetConnectionString(IConfiguration, String) Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.configurationextensions.getconnectionstring?view=net-8.0)
 
-# Недели 11 - 12: Синхронное межсервисное взаимоедйствие; Фоновые задачи
+# Недели 11 - 12: Синхронное межсервисное взаимодействие; Фоновые задачи
 
 ## Цель
 
@@ -498,6 +498,81 @@ public class UnitOfWork : IUnitOfWork
 [RestEase github page](https://github.com/canton7/RestEase)  
 [OpenApi](https://www.openapis.org)  
 
-# Недели 13 - 14
+# Недели 13 - 14: Асинхронное межсервисное взаимодействие
 
-# Недели 15 - 16
+## Цель
+
+Сформировать понимание:
+- Преимущества и недостатки асинхронных взаимодействий
+
+Сформировать наывыки:
+- Использование библиотеки Rebus для асинхронного взаимодействия с другим сервисом через RabbitMQ
+
+## Задача
+
+1. Запустить сервис Catalog и его зависимости через docker compose. Для этого в корневом каталоге решения выполнить команду `docker compose up -d booking-service_catalog-host`
+2. Проверить, что сервис Catalog создал exchange и очередь в RabbitMQ
+   - Открыть аминистративную панель RabbitMQ по пути `http://localhost:15672`
+   - Авторизоваться используя логин admin и пароль admin
+   - Проверить наличие exchange с именами `booking-service_catalog-direct`
+ и `booking-service_catalog-topics` на вкладке `Exchanges`   
+   - Проверить наличие queue с именем `booking-service_catalog-queue` на вкладке `Queues and Streams`
+   - Проверить, что у очереди существует один Consumer, и она привязана к exchange `booking-service_catalog-direct` по routing key `booking-service_catalog-queue` на странице очереди `booking-service_catalog-queue`
+![Queue](rabbitmq-queue-configuration.png)
+   - В случае невыполнения одно из условий погасить docker compose командой `docker compose down` и вернуться к пункту 1
+3. Подключить nuget-пакеты в сборку `BookingService.Booking.AppServices`
+   - `BookingService.Catalog.Async.Api.Contracts` 
+   - `Rebus`
+   - `Rebus.ServiceProvider`
+4. Подключить nuget-пакеты в сборку `BookingService.Booking.Host`
+   - `Rebus.RabbitMq`
+   - `Rebus.Serilog`
+5. Создать класс `RebusRabbitMqOptions` с свойством `string ConnectionString` в сборке `BookingService.Booking.Host`
+6. Зарегистрировать `RebusRabbitMqOptions` в DI и смапить на секцию конфигурации с именем `RebusRabbitMqOptions`, вызвав метод `Configure` на `IServiceCollection` в методе `ConfigureServices` класса `Startup.cs`.
+7. Добавить секцию `RebusRabbitMqOptions` в appsettings:
+   - Строка подключения для `appsettings.Development.json` - `amqp://admin:admin@localhost:5672`
+   - Строка подключеня для `appsettings.Production.json` - `amqp://admin:admin@rabbitmq:5672`
+8. Сконфигурировать Rebus для работы с RabbitMQ:
+   - Подключить Rebus методе `ConfigureServices` класса `Startup`:
+```csharp
+services.AddRebus((builder, ctx) =>
+  builder.Transport(t =>
+    t.UseRabbitMq(ctx.GetRequiredService<IOptions<RebusRabbitMqOptions>>().Value.ConnectionString, "booking-service_bookings-queue")
+      .DefaultQueueOptions(queue => queue.SetDurable(true))
+      .ExchangeNames("booking-service_booking-direct", "booking-service_catalog-topics"))
+    .Serialization(s => s.UseSystemTextJson())
+    .Logging(l => l.Serilog())
+    .Routing(r => r.TypeBased()));
+```
+   - Подписаться на событие `BookingJobConfirmed` в методе `Configure` класса `Startup`: `app.ApplicationServices.GetRequiredService<IBus>().Subscribe<BookingJobConfirmed>();` 
+   - Подписаться на событие `BookingJobDenied` в методе `Configure` класса `Startup`: `app.ApplicationServices.GetRequiredService<IBus>().Subscribe<BookingJobDenied>();` 
+9. Изменить способ взаимодействия сервиса `BookingService` с сервисом Catalog на асинхронный
+    - Удалить поле типа `IBookingsJobsController`, которое использовалось для синхронного взаимодействия.
+    - Создать поле типа `IBus` и инициализировать его из конструктора, внедрив `IBus` из DI
+    - Обновить метод `Create`
+      - Создать экземпляр  `CreateBookingJobRequest` по аналогии с `CreateBookingJobComand`, заполнив его соответсвующими значениями`. `EventId` заполнять случайным Guid. 
+      - Отправить созданный экземпляр `CreateBookingJobRequest`, вызвав метод `Publish` на `IBus`
+      - Удалить код, использующий `IBookingsJobsController` и всё, что с ним связано из метода `Create`
+    - Обновить метод `Cancel`
+      - Создать экземпляр  `CancelBookingJobByRequestIdRequest` по аналогии с `CancelBookingJobByRequestIdCommand`, заполнив его соответсвующими значениями`. `EventId` заполнять случайным Guid. 
+      - Отправить созданный экземпляр `CancelBookingJobByRequestIdRequest`, вызвав метод `Publish` на `IBus`
+      - Удалить код, использующий `IBookingsJobsController` и всё, что с ним связано из метода `Cancel`
+10.   Добавить метод `Task<BookingAggregate?> GetBookingByRequestId(Guid requestId, CancellationToken = default)` в интерфейс `IBookingBackgroundQueries` и реализовать его в `BookingBackgroundQueries`.
+11.  Изменить способ получения обновлений от сервиса Catalog на асинхронный
+    - Создать каталог `EventHandlers` в `BookingService.Booking.AppServices`
+    - Создать обработчик для события `BookingJobConfirmed`, которое будет сигнализировать о подтверждении бронирования в сервисе Catalog
+      - Создать класс `BookingJobConfirmedEventHandler`, реализующий `IHandleMessages<BookingJobConfirmed>` в каталоге `EventHandlers`
+      - В методе `Handle` реализовать логику получения бронирования по `RequestId` из БД с использованием `IBookingBackgroundQueries` и его подтверждения. Если бронирование не найдено по идентификатору запроса из события, выводить в лог сообщение с уровнем `Warning`. 
+      - Зарегистрировать `BookingJobConfirmedEventHandler` в DI с помощью метода `AddRebusHandler`, вызванного на `IServiceCollection` в методе `AddAppServices` 
+    - Создать обработчик для события `BookingJobDenied`, которое будет сигнализировать о подтверждении бронирования в сервисе Catalog
+       - Создать класс `BookingJobDeniedEventHandler`, реализующий `IHandleMessages<BookingJobDenied>` в каталоге `EventHandlers`
+      - В методе `Handle` реализовать логику получения бронирования по `RequestId` из БД с использованием `IBookingBackgroundQueries` и его отмены. Если бронирование не найдено по идентификатору запроса из события, выводить в лог сообщение с уровнем `Warning`.  
+      - Зарегистрировать `BookingJobDeniedEventHandler` в DI с помощью метода `AddRebusHandler`, вызванного на `IServiceCollection` в методе `AddAppServices`
+    - Удалить `BookingsBackgroundService`, каталог `Jobs`, `BookingsBackgroundService`, `IBookingsBackgroundServiceHandler`, `BookingsBackgroundServiceHandler`. Удалить метод `GetConfirmationAwaitingBookings` из `IBookingBackgroundQueries` и его реализацию из `BookingBackgroundQueries`
+12.  Удалить nuget-пакет `BookingService.Catalog.Api.Contracts` из `BookingService.Booking.AppServices`
+    - Удалить `BookingcatalogRestOptions` и секции конфигурации из appsettings.*.json
+    - Удалить `Configure` для `BookingCatalogRestOptions` в методе `AddAppServices`
+    - Удалить `AddHttpClient` с именем `BookingCataligRestOptions` в методе `AddAppServices`
+    - Удалить регистрацию RestEase клиента для `IBookingJobsController` в методе `AddAppServices`  
+
+## Критерии оценки 
