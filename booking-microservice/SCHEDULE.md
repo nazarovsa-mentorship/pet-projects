@@ -412,6 +412,10 @@ public class UnitOfWork : IUnitOfWork
 - Использование RestEase клиента для взаимодействия с другим сервисом
 - Реализация фоновых задач с использованием класса `BackgroundService`
 
+## Подготовка
+
+- Проверь, что версии образов в локальном docker-compose для catalog-host и catalog-migrations соответсвуют версиям в docker-compose в этом репозитории
+
 ## Задача
 
 1. Создать каталог `Options` в `BookingService.Booking.AppServices`
@@ -508,6 +512,10 @@ public class UnitOfWork : IUnitOfWork
 Сформировать наывыки:
 - Использование библиотеки Rebus для асинхронного взаимодействия с другим сервисом через RabbitMQ
 
+## Подготовка
+
+- Проверь, что версии образов в локальном docker-compose для catalog-host и catalog-migrations соответсвуют версиям в docker-compose в этом репозитории
+
 ## Задача
 
 1. Запустить сервис Catalog и его зависимости через docker compose. Для этого в корневом каталоге решения выполнить команду `docker compose up -d booking-service_catalog-host`
@@ -576,3 +584,10 @@ services.AddRebus((builder, ctx) =>
     - Удалить регистрацию RestEase клиента для `IBookingJobsController` в методе `AddAppServices`  
 
 ## Критерии оценки 
+
+- Синхронные взаимодействия заменены на асинхронные
+  - Сконфигурирован Rebus
+  - Сервис `BookingService.Bookings.Host` отправляет сообщения в RabbitMQ через Rebus при создании и отмене бронирования
+  - Сервис `BookingService.Bookings.Host` подписан на события `BookingJobConfirmed` и `BookingJobDenied`
+  - Реализованы обработчики для событий `BookingJobConfirmed` и `BookingJobDenied`
+  - Удалены зависимости и классы, использовавшиеся для синхронного взаимодействия с сервисом Catalog
