@@ -565,8 +565,8 @@ services.AddRebus((builder, ctx) =>
       - Создать экземпляр  `CancelBookingJobByRequestIdRequest` по аналогии с `CancelBookingJobByRequestIdCommand`, заполнив его соответсвующими значениями`. `EventId` заполнять случайным Guid. 
       - Отправить созданный экземпляр `CancelBookingJobByRequestIdRequest`, вызвав метод `Publish` на `IBus`
       - Удалить код, использующий `IBookingsJobsController` и всё, что с ним связано из метода `Cancel`
-10.   Добавить метод `Task<BookingAggregate?> GetBookingByRequestId(Guid requestId, CancellationToken = default)` в интерфейс `IBookingBackgroundQueries` и реализовать его в `BookingBackgroundQueries`.
-11.  Изменить способ получения обновлений от сервиса Catalog на асинхронный
+10. Добавить метод `Task<BookingAggregate?> GetBookingByRequestId(Guid requestId, CancellationToken = default)` в интерфейс `IBookingBackgroundQueries` и реализовать его в `BookingBackgroundQueries`.
+11. Изменить способ получения обновлений от сервиса Catalog на асинхронный
     - Создать каталог `EventHandlers` в `BookingService.Booking.AppServices`
     - Создать обработчик для события `BookingJobConfirmed`, которое будет сигнализировать о подтверждении бронирования в сервисе Catalog
       - Создать класс `BookingJobConfirmedEventHandler`, реализующий `IHandleMessages<BookingJobConfirmed>` в каталоге `EventHandlers`
@@ -577,7 +577,7 @@ services.AddRebus((builder, ctx) =>
       - В методе `Handle` реализовать логику получения бронирования по `RequestId` из БД с использованием `IBookingBackgroundQueries` и его отмены. Если бронирование не найдено по идентификатору запроса из события, выводить в лог сообщение с уровнем `Warning`.  
       - Зарегистрировать `BookingJobDeniedEventHandler` в DI с помощью метода `AddRebusHandler`, вызванного на `IServiceCollection` в методе `AddAppServices`
     - Удалить `BookingsBackgroundService`, каталог `Jobs`, `BookingsBackgroundService`, `IBookingsBackgroundServiceHandler`, `BookingsBackgroundServiceHandler`. Удалить метод `GetConfirmationAwaitingBookings` из `IBookingBackgroundQueries` и его реализацию из `BookingBackgroundQueries`
-12.  Удалить nuget-пакет `BookingService.Catalog.Api.Contracts` из `BookingService.Booking.AppServices`
+12. Удалить nuget-пакет `BookingService.Catalog.Api.Contracts` из `BookingService.Booking.AppServices`
     - Удалить `BookingcatalogRestOptions` и секции конфигурации из appsettings.*.json
     - Удалить `Configure` для `BookingCatalogRestOptions` в методе `AddAppServices`
     - Удалить `AddHttpClient` с именем `BookingCataligRestOptions` в методе `AddAppServices`
