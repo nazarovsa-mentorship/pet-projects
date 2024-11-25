@@ -522,10 +522,10 @@ public class UnitOfWork : IUnitOfWork
 2. Проверить, что сервис Catalog создал exchange и очередь в RabbitMQ
    - Открыть аминистративную панель RabbitMQ по пути `http://localhost:15672`
    - Авторизоваться используя логин admin и пароль admin
-   - Проверить наличие exchange с именами `booking-service_catalog-direct`
- и `booking-service_catalog-topics` на вкладке `Exchanges`   
-   - Проверить наличие queue с именем `booking-service_catalog-queue` на вкладке `Queues and Streams`
-   - Проверить, что у очереди существует один Consumer, и она привязана к exchange `booking-service_catalog-direct` по routing key `booking-service_catalog-queue` на странице очереди `booking-service_catalog-queue`
+   - Проверить наличие exchange с именами `booking-service-catalog-direct`
+ и `booking-service-topics` на вкладке `Exchanges`   
+   - Проверить наличие queue с именем `booking-service-catalog-queue` на вкладке `Queues and Streams`
+   - Проверить, что у очереди существует один Consumer, и она привязана к exchange `booking-service-catalog-direct` по routing key `booking-service-catalog-queue` на странице очереди `booking-service-catalog-queue`
 ![Queue](rabbitmq-queue-configuration.png)
    - В случае невыполнения одно из условий погасить docker compose командой `docker compose down` и вернуться к пункту 1
 3. Подключить nuget-пакеты в сборку `BookingService.Booking.AppServices`
@@ -545,9 +545,9 @@ public class UnitOfWork : IUnitOfWork
 ```csharp
 services.AddRebus((builder, ctx) =>
   builder.Transport(t =>
-    t.UseRabbitMq(ctx.GetRequiredService<IOptions<RebusRabbitMqOptions>>().Value.ConnectionString, "booking-service_bookings-queue")
+    t.UseRabbitMq(ctx.GetRequiredService<IOptions<RebusRabbitMqOptions>>().Value.ConnectionString, "booking-service-booking-queue")
       .DefaultQueueOptions(queue => queue.SetDurable(true))
-      .ExchangeNames("booking-service_booking-direct", "booking-service_catalog-topics"))
+      .ExchangeNames("booking-service-booking-direct", "booking-service-topics"))
     .Serialization(s => s.UseSystemTextJson())
     .Logging(l => l.Serilog())
     .Routing(r => r.TypeBased()));
