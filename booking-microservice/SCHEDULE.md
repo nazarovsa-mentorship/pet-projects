@@ -419,7 +419,7 @@ public class UnitOfWork : IUnitOfWork
       RestClient.For<IBookingJobsController>(ctx.GetRequiredService<IHttpClientFactory>()        .CreateClient(nameof(BookingCatalogRestOptions))));
   ```
 7. Добавить свойство `public Guid? CatalogRequestId { get; private set; }` в `BookingAggregate`
-8. Добавить метод `SetCatalogRequestId(Guid catalogRequestId)`:
+8. Добавить метод `SetCatalogRequestId(Guid catalogRequestId)`:
    - Бросает `DomainException`, если `catalogRequestId` имеет значение по умолчанию
    - Устанавливать значение `CatalogRequestId`, если оно null
    - Бросает `DomainException`, если `CatalogRequestId` уже имеет значение 
