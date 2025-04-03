@@ -145,6 +145,40 @@ public record GetAllUsersResponse(UserData[] users);
 
 **Внедрение зависимостей (Dependency injection)** - это паттерн, который позволяет реализовать принцип [Dependency Inversion](https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles#dependency-inversion) из SOLID между классами и их зависимостями. Основной принцип - **использовать в качестве зависимостей интерфейсы, а их реализации регистрировать в DI**.
 
+## Dependency Injection: Уровни жизни сервисов
+
+При регистрации зависимостей важно понимать различия между уровнями жизни:
+
+### Transient
+
+```csharp
+services.AddTransient<IMyService, MyService>();
+```
+
+- Создается новый экземпляр при каждом запросе сервиса
+- Подходит для легковесных сервисов без состояния
+- Использует больше ресурсов при частом создании
+
+### Scoped
+
+```csharp
+services.AddScoped<IMyService, MyService>();
+```
+
+- Один экземпляр на скоуп или каждый HTTP-запрос
+- Идеален для сервисов зависящих от контекста запроса
+- Стандартный выбор для большинства сервисов в веб-приложениях
+
+### Singleton
+
+```csharp
+services.AddSingleton<IMyService, MyService>();
+```
+
+- Один экземпляр на все приложение
+- Подходит для сервисов не зависящих от состояния
+- Требует осторожности с потокобезопасностью
+
 ## Материалы для самостоятельного изучения
 
 [.NET dependency injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)
