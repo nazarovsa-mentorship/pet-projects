@@ -380,9 +380,10 @@ public class UnitOfWork : IUnitOfWork
 Сформировать понимание:
 - Преимущества и недостатки синхронных взаимодействий
 
-Сформировать наывыки:
+Сформировать навыки:
 - Использование RestEase клиента для взаимодействия с другим сервисом
 - Реализация фоновых задач с использованием класса `BackgroundService`
+- Использование Polly для создания политик повторных вызовов в случае ошибки
 
 ## Подготовка
 
@@ -400,6 +401,7 @@ public class UnitOfWork : IUnitOfWork
    - `Microsoft.Extensions.Hosting.Abstractions`
    - `Microsoft.Extensions.Options.ConfigurationExtensions` 
    - `Microsoft.Extensions.Http` 
+   - `Microsoft.Extensions.Http.Polly`
 5. Добавить в метод `AddAppServices` аргумент типа `IConfiguration`
 6. Добавить подключение RestEase клиента для сервиса Catalog в метод `AddAppservices`
   - Сконфигурировать `BookingCatalogRestOptions` на основании секции конфигурации с помощью метода `Configure<T>`
@@ -415,45 +417,46 @@ public class UnitOfWork : IUnitOfWork
   ```
   - Зарегистрировать RestEase клиент для сервиса Catalog:
   ```csharp
-    services.AddScoped<IBookingJobsController>(ctx =>
-      RestClient.For<IBookingJobsController>(ctx.GetRequiredService<IHttpClientFactory>()        .CreateClient(nameof(BookingCatalogRestOptions))));
+    services.AddScoped<IBookingJobsController>(ctx => RestClient.For<IBookingJobsController>(ctx.GetRequiredService<IHttpClientFactory>()
+        .CreateClient(nameof(BookingCatalogRestOptions))));
   ```
-7. Добавить свойство `public Guid? CatalogRequestId { get; private set; }` в `BookingAggregate`
-8. Добавить метод `SetCatalogRequestId(Guid catalogRequestId)`:
+7. Настроить политику повторных вызовов на основе библиотеки Polly для зарегистрированного http-клиента. В случае неуспешного ответа необходимо выполнить 4 повторf с экспоненциальным возрастанием ожидания между ними: 2, 4, 8 и 16 секунды соответственно. 
+8. Добавить свойство `public Guid? CatalogRequestId { get; private set; }` в `BookingAggregate`
+9. Добавить метод `SetCatalogRequestId(Guid catalogRequestId)`:
    - Бросает `DomainException`, если `catalogRequestId` имеет значение по умолчанию
    - Устанавливать значение `CatalogRequestId`, если оно null
    - Бросает `DomainException`, если `CatalogRequestId` уже имеет значение 
-9.  Выполнить маппинг `CatalogRequestId` в `BookingAggregateConfiguration` на базу данных
-10. Создать миграцию `AddCatalogRequestId`
-11. Обновить БД в контейнере запуском `dotnet ef database update`
-12. Внедрить `IBookingJobsController` в `BookingService`
-13. Расширить логику метода `Create`. 
+10.  Выполнить маппинг `CatalogRequestId` в `BookingAggregateConfiguration` на базу данных
+11.  Создать миграцию `AddCatalogRequestId`
+12.  Обновить БД в контейнере запуском `dotnet ef database update`
+13.  Внедрить `IBookingJobsController` в `BookingService`
+14.  Расширить логику метода `Create`. 
     - После создания экземпляра `BookingAggregate` создать идентификатор запроса для обращения к сервису Catalog, используя `Guid.NewGuid()`
     - Присвоить созданный идентификатор полю `CatalogRequestId` созданного агрегата
     - Выполнить метод `CreateBookingJob` на `IBookingJobsController` для создания задания на подтверждение ресурса в сервисе `Catalog`
-14. Расширить логику метода `Cancel`
+15.  Расширить логику метода `Cancel`
     - Отменить бронирование в сервисе Catalog, если `CatalogRequestId` не равно null. Для простоты считаем, что если значение null, то запрос на бронирование в сервис Catalog не отправлялся, и можно отменить бронирование только в сервисе Booking.
     - Вызвать метод `CancelBookingJob` на `IBookingJobsController` для отмены бронирования в сервисе каталог.
-15. Создать каталог `Jobs` в каталоге `Bookings` сборки `BookingService.Booking.AppServices`
-16. Создать интерфейс `IBookingsBackgroundServiceHandler` с методом `Handle`, который возвращает `Task` и принимает `CancellationToken`
-17. Создать интерфейс `IBookingsBackgroundQueries` в каталоге `Bookings` сборки `BookingService.Booking.Domain`. Интерфейс должен содержать метод `GetConfirmationAwaitingBookings`, получающий количество возвращаемых значений (значение по умолчанию 10) и возвращающий `IReadOnlyCollection<BookingAggregate>`. Агрегаты должны быть отсортированы по возрастанию Id. То есть, метод возвращает n бронирований в статусе "Ожидает подтверждения", отсортированных по возрастанию идентификатора. 
-18. Создать класс `BookingsBackgroundQueries`, реализующий `IBookingsBackgroundQueries`, в сборке `BookingService.Booking.Persistence`. Для взаимодействия с БД использовать `BookingsContext`
-19. Зарегистрировать `BookingsBackgroundQueries` как реализацию `IBookingsBackgroundQueries` в методе `AddPersistence` сборки `BookingsService.Booking.Persistence`
-20. Создать класс `BookingsBackgroundServiceHandler` реализующий `IBookingsBackgroundServiceHandler`. Метод `Handle` должен реализовывать следующую логику
+16. Создать каталог `Jobs` в каталоге `Bookings` сборки `BookingService.Booking.AppServices`
+17. Создать интерфейс `IBookingsBackgroundServiceHandler` с методом `Handle`, который возвращает `Task` и принимает `CancellationToken`
+18. Создать интерфейс `IBookingsBackgroundQueries` в каталоге `Bookings` сборки `BookingService.Booking.Domain`. Интерфейс должен содержать метод `GetConfirmationAwaitingBookings`, получающий количество возвращаемых значений (значение по умолчанию 10) и возвращающий `IReadOnlyCollection<BookingAggregate>`. Агрегаты должны быть отсортированы по возрастанию Id. То есть, метод возвращает n бронирований в статусе "Ожидает подтверждения", отсортированных по возрастанию идентификатора. 
+19. Создать класс `BookingsBackgroundQueries`, реализующий `IBookingsBackgroundQueries`, в сборке `BookingService.Booking.Persistence`. Для взаимодействия с БД использовать `BookingsContext`
+20. Зарегистрировать `BookingsBackgroundQueries` как реализацию `IBookingsBackgroundQueries` в методе `AddPersistence` сборки `BookingsService.Booking.Persistence`
+21. Создать класс `BookingsBackgroundServiceHandler` реализующий `IBookingsBackgroundServiceHandler`. Метод `Handle` должен реализовывать следующую логику
     - Получить из БД 10 агрегатов `Bookings` со статусом `AwaitConfirmation` с использованием интерфейса `IBookingsBackgroundQueries`
     - Для каждого агрегата:
       - Вывести в лог сообщение о том, что у агрегата некорреткное состояние, с уровнем `Warning` и перейти к следущему агрегату
       - Получить статус бронирования ресурса `BookingJobStatus` по `CatalogRequestId` из сервиса Catalog, вызвав метод `GetBookingJobStatusByRequestId` на `IBookingJobsController`
       - Перевести `BookingsAggregate` в состояние "Подтверждено", если полученный статус `Confirmed`
       - Перевести `BookignsAggregate` в состояние "Отменено", если полученный статус `Cancelled`
-21. Создать класс `BookingsBackgroundService`, наследующий от `BackgroundService`. Метод ExecuteAsync должен реализовывать следующую логику:
+22. Создать класс `BookingsBackgroundService`, наследующий от `BackgroundService`. Метод ExecuteAsync должен реализовывать следующую логику:
     - Пока не запрошена отмена `stoppingToken`:
     - Создать scope через `ISeviceProvider`
     - Создать экземляр `IBookingsBackgroundServiceHandler` вызовом `scope.ServiceProvider.GetRequiredService<IBookingsBackgroundServiceHandler>()`
     - Вызвать метод `Handle` полученного экземпляра `IBookingsBackgroundServiceHandler`, передав в него `stoppingToken`
     - После успешного вызова поставить работу на ожидание на 5 секунд, через `Task.Delay` 
     - Вышеописанная логика должна быть обернута в блок try. В случае возникновения ошибки необходимо залогировать сообщение с уровнем `Error` и поставить работу на ожидание на 1 минуту, через `Task.Delay`
-22. В методе AddAppServices:
+23. В методе AddAppServices:
     - Зарегистрировать `BookingsBackgroundServiceHandler` как реализацию `IBookingsBackgroundServiceHandler` с временем жизни scoped
     - Зарегистрировать `BookingsBackgroundService` через метод `AddHostedService`
 
@@ -471,6 +474,7 @@ public class UnitOfWork : IUnitOfWork
 ## Материалы для изучения
 
 [Dependency injection in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-8.0)  
+[Implement HTTP call retries with exponential backoff with IHttpClientFactory and Polly policies](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-http-call-retries-exponential-backoff-polly)  
 [RestEase github page](https://github.com/canton7/RestEase)  
 [OpenApi](https://www.openapis.org)  
 

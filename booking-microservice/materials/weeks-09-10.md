@@ -11,6 +11,7 @@
 Сформировать наывыки:
 - Использование RestEase клиента для взаимодействия с другим сервисом
 - Реализация фоновых задач с использованием класса `BackgroundService`
+- Использование Polly для создания политик повторных вызовов в случае ошибки
 
 # Синхронные межсервисные взаимодействия
 
@@ -171,3 +172,87 @@ public sealed class LoggingBackgroundService : BackgroundService
 ```
 
 Теперь код создает service scope, в рамках которого каждый раз создается новый сервис `IOptionsSnapshot<MyOptions>`.
+
+# Политики повторов и библиотека Polly
+
+## Политики повторов
+
+При взаимодействии между сервисами через сеть могут возникать временные сбои:
+- Потеря пакетов
+- Превышение таймаута
+- Временная недоступность сервиса
+- Разрыв соединения
+
+**Политика повторов** - это стратегия обработки временных сбоев путем повторного выполнения операции. В случае недоступности сервиса клиент пытается обратиться к нему позже с заданным количеством повторов и интервалами между повторами на основе заданных условий.
+
+## Библиотека Polly
+
+**Polly** - это библиотека для реализации политик устойчивости и обработки временных сбоев. Она предоставляет декларативный способ описания различных политик:
+- Retry (Повторы)
+- Circuit Breaker (Размыкатель цепи)
+- Timeout (Таймаут)
+- Bulkhead Isolation (Изоляция отсеков)
+- Cache (Кэширование)
+- Fallback (Резервный вариант)
+
+Познакомиться с реализацией каждого ты можешь в интернете, мы будем использовать Retry политику.
+
+### Базовые концепции Polly
+
+```csharp
+// Определение политики
+var policy = Policy
+    .Handle<HttpRequestException>()
+    .WaitAndRetry(3, retryAttempt => 
+        TimeSpan.FromSeconds(2));
+
+// Использование политики
+await policy.ExecuteAsync(async () =>
+{
+    // Код, который может вызвать исключение
+    await httpClient.GetAsync("api/resource");
+});
+```
+
+### Стратегии повторов
+
+Polly поддерживает различные стратегии определения интервалов между повторами:
+
+1. Фиксированный интервал
+```csharp
+// 2 секунды между каждым повтором
+TimeSpan.FromSeconds(2)
+```
+
+1. Линейное возрастание
+```csharp
+// 2, 4, 6, 8 секунд
+retryAttempt => TimeSpan.FromSeconds(2 * retryAttempt)
+```
+
+1. Экспоненциальное возрастание
+```csharp
+// 2, 4, 8, 16 секунд (2 в степени n)
+retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+```
+
+Интервал между повторами увеличивается экспоненциально. Это помогает cнизить нагрузку на систему при массовых сбоях и дать системе время на восстановление.
+
+Формула расчета интервала:
+
+### Интеграция с HttpClient
+
+ASP.NET Core предоставляет встроенную поддержку Polly через `Microsoft.Extensions.Http.Polly`. Это позволяет настраивать политики при регистрации HttpClient:
+
+```csharp
+services.AddHttpClient("MyClient")
+    .AddTransientHttpErrorPolicy(builder => builder
+        .WaitAndRetryAsync(3, retryAttempt => 
+            TimeSpan.FromSeconds(2)));
+```
+
+### Материалы для изучения
+
+- [Polly GitHub](https://github.com/App-vNext/Polly)
+- [Polly and HttpClientFactory](https://learn.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/implement-http-call-retries-exponential-backoff-polly)
+[Exponential Backoff And Jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)
