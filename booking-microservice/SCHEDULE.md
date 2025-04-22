@@ -96,8 +96,8 @@
    - `Cancel` - Принимает идентификатор.
 7. Создать реализацию интерфейса `IBookingsService`, `BookingService`, в том же каталоге, что интерфейс, без реализации методов (в теле методов `throw new NotImplementedException()`).
 8. Cоздать интерфейс  `IBookingsQueries` с контрактами бизнес-логики, обрабатывающей запросы на выборку данных в каталоге `Bookings` сборки `BookingService.Booking.AppServices`. Методы интерфейса:
-    - `GetById` - Принимает идентификатор. Возвращает `BookingData`.
-    - Обработчик `GetByFilter`, возвращающий `BookingData[]`.
+	- `GetById` - Принимает идентификатор. Возвращает `BookingData`.
+	- Обработчик `GetByFilter`, возвращающий `BookingData[]`.
 	- Обработчик `GetStatusById`, возвращающий статус бронирования.
 9.  Создать реализацию интерфейса `IBookingsQueries`, `BookingQueries`, в том же каталоге, что интерфейс, без реализации методов (в теле методов `throw new NotImplementedException()`).
 10. Создать статический класс `ServiceCollectionExtensions` в каталоге `Bookings`  сборки `BookingService.Booking.AppServices`. Создать в нем статический метод расширения для `IServiceCollection` с именем `AddAppServices`.
