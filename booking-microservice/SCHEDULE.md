@@ -152,7 +152,6 @@
 2. Создать каталог `Dates` в сборке `BookingService.Booking.AppServices`
 	- Создать интерфейс `ICurrentDateTimeProvider` и его реализацию `DefaultCurrentDateTimeProvider` в каталоге `Dates`
 	- Зарегистрировать `DefaultCurrentDateTimeProvider` как реализвацию `ICurrentDateTimeProvider` в DI контейнере с уровнем жизни `Singleton` в методе `AddAppServices` из предыдущей недели
-	- Используй `ICurrentDateTimeProvider` везде где понадобится текущая дата и время, этот подхоид позволит добиться детерменируемости юнит тестов. Прямое использование DateTime.Now или DateTime.UtcNow в коде приводит к тому, что тесты становятся зависимыми от системного времени, что делает их недетерминированными.
 3. Создать каталог `Bookings` в сборке `BookingService.Booking.Domain.Contracts`
 4. Переместить созданные ранее enums, относящиеся к `BookingData` из сборки `BookingService.Booking.Api.Contracts` в каталог `Bookings` сборки `BookingService.Booking.Domain.Contracts`
 5. Добавить зависимость от сборки `BookingService.Booking.Domain.Contracts` в `BookingService.Booking.Api.Contracts`
