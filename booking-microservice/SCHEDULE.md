@@ -93,10 +93,10 @@
 5. Создать каталог `Bookings` в сборке `BookingService.Booking.AppServices`.
 6. Создать интерфейс `IBookingsService` с контрактами бизнес-логики, обрабатывающей команды в каталоге `Bookings` сборки `BookingService.Booking.AppServices`. Методы интерфейса должны отражать методы контроллера, но вместо типов запроса `*Request` принимать целевой набор значений.
    - `Create` - Принимает значения из запроса `CreateBookingRequest`. Возвращает идентификатор.
-   - `GetById` - Принимает идентификатор. Возвращает `BookingData`.
    - `Cancel` - Принимает идентификатор.
 7. Создать реализацию интерфейса `IBookingsService`, `BookingService`, в том же каталоге, что интерфейс, без реализации методов (в теле методов `throw new NotImplementedException()`).
 8. Cоздать интерфейс  `IBookingsQueries` с контрактами бизнес-логики, обрабатывающей запросы на выборку данных в каталоге `Bookings` сборки `BookingService.Booking.AppServices`. Методы интерфейса:
+	- `GetById` - Принимает идентификатор. Возвращает `BookingData`.
 	- Обработчик `GetByFilter`, возвращающий `BookingData[]`.
 	- Обработчик `GetStatusById`, возвращающий статус бронирования.
 9.  Создать реализацию интерфейса `IBookingsQueries`, `BookingQueries`, в том же каталоге, что интерфейс, без реализации методов (в теле методов `throw new NotImplementedException()`).
