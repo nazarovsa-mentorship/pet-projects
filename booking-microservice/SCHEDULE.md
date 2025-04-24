@@ -1,6 +1,6 @@
 # План проекта
 
-# Недели 1 - 2: Создание микросервиса
+# Итерация 1: Создание микросервиса
 
 ## Цель
 
@@ -65,7 +65,7 @@
 [Docker Compose Overview](https://docs.docker.com/compose/)  
 [Git aliases](https://git-scm.com/book/en/v2/Git-Basics-Git-Aliases)
 
-# Недели 3 - 4: Создание API и абстракций бизнес-логики приложения
+# Итерация 2: Создание API и абстракций бизнес-логики приложения
 
 ## Цель
 
@@ -134,7 +134,7 @@
 [Metanit: Создание контроллера](https://metanit.com/sharp/aspnet5/23.2.php)  
 [Handling Web API Exceptions with ProblemDetails middleware](https://andrewlock.net/handling-web-api-exceptions-with-problemdetails-middleware/)  
 
-# Недели 5 - 6: Создание и тестирование бизнес-логики приложения
+# Итерация 3: Создание и тестирование бизнес-логики приложения
 
 ## Цель
 
@@ -184,7 +184,7 @@
 [Блеск и нищета модели предметной области](https://habr.com/ru/companies/jugru/articles/503868/)  
 Владимир Хориков: Принципы unit-тестирования - Глава 1, 2, 3
 
-# Недели 7 - 8: Создание слоя взаимодействия с БД; Библиотека EntityFramework Core
+# Итерация 4: Создание слоя взаимодействия с БД; Библиотека EntityFramework Core
 
 ## Цель
 
@@ -373,7 +373,7 @@ public class UnitOfWork : IUnitOfWork
 [Learn EntityFramework Core: EF Core Migrations](https://www.learnentityframeworkcore.com/migrations)  
 [ConfigurationExtensions.GetConnectionString(IConfiguration, String) Method](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.configurationextensions.getconnectionstring?view=net-8.0)
 
-# Недели 9 - 10: Синхронное межсервисное взаимодействие; Фоновые задачи
+# Итерация 5: Синхронное межсервисное взаимодействие; Фоновые задачи
 
 ## Цель
 
@@ -478,7 +478,7 @@ public class UnitOfWork : IUnitOfWork
 [RestEase github page](https://github.com/canton7/RestEase)  
 [OpenApi](https://www.openapis.org)  
 
-# Недели 11 - 12: Асинхронное межсервисное взаимодействие
+# Итерация 6: Асинхронное межсервисное взаимодействие
 
 ## Цель
 
